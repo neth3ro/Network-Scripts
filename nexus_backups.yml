@@ -1,0 +1,27 @@
+# Ansible Playbook: nexus_backups.yml
+---
+- name: Save NXOS Configurations
+  hosts: nexus_backups
+  gather_facts: false
+  connection: local
+
+  tasks:
+    - name: Gathering Timestamp
+      shell: "date +%Y-%m-%d%H-%M-%S"
+      register: tstamp
+
+    - name: Set Time Variables
+      set_fact:
+        cur_year: "{{ tstamp.stdout[0:4]}}"
+        cur_month: "{{ tstamp.stdout[5:7]}}"
+        cur_day: "{{ tstamp.stdout[8:10]}}"
+        cur_hour: "{{ tstamp.stdout[10:12]}}"
+        cur_minute: "{{ tstamp.stdout[13:15]}}"
+        cur_time: "{{ tstamp.stdout[16:]}}"
+
+    - name: Copy Running Configuration to TFTP
+      nxos_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}-confg.{{ cur_year }}{{ cur_month }}{{ cur_day }}{{ cur_hour }}{{ cur_minute }}"
+          dir_path: /tftpboot/nexus_backups/
